@@ -33,10 +33,18 @@ export function useAuth() {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isHydrated, setIsHydrated] = useState(false)
   const router = useRouter()
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
 
   // Check for existing session on mount
   useEffect(() => {
+    if (!isHydrated) return
+    
     const checkAuth = async () => {
       try {
         const userData = await apiClient.getCurrentUser() as User
@@ -50,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     checkAuth()
-  }, [])
+  }, [isHydrated])
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
@@ -92,8 +100,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/login")
   }
 
-  // Show loading screen
-  if (isLoading) {
+  // Show loading screen during hydration or auth check
+  if (!isHydrated || isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-center">

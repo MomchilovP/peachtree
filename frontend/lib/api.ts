@@ -40,13 +40,16 @@ export interface UpdateTransactionRequest {
 class ApiClient {
   private baseUrl: string;
   private token: string | null = null;
+  private isInitialized: boolean = false;
 
   constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl;
-    
-    // Load token from localStorage on client side
-    if (typeof window !== 'undefined') {
+  }
+
+  private initializeToken() {
+    if (!this.isInitialized && typeof window !== 'undefined') {
       this.token = localStorage.getItem('auth_token');
+      this.isInitialized = true;
     }
   }
 
@@ -68,6 +71,9 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    // Initialize token from localStorage on first request
+    this.initializeToken();
+    
     const url = `${this.baseUrl}${API_PREFIX}${endpoint}`;
     
     const headers: Record<string, string> = {
